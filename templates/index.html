@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+
+    <script src="https://code.jquery.com/jquery-3.6.3.js" integrity="sha256-nQLuAZGRRcILA+6dMBOvcRh5Pe310sBpanc6+QBmyVM=" crossorigin="anonymous"></script>
+    <link href="../static/style.css" rel="stylesheet" type="text/css">
+    <style>
+*{
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: Calibri;
+    font-size: 16px;
+}
+
+.center_block {
+    width: 30%;
+    height: 70vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.left_block {
+    width: 100%;
+    height: 70vh;
+    justify-content: center;
+
+}
+.container {
+    width: 350px;
+    padding: 20px;
+    border: 1px solid #eee;
+    box-shadow: 0px 0px 10px gray;
+}
+p {
+    font-size: 25px;
+    font-weight: bold;
+    margin-bottom: 20px;
+}
+input, textarea, select {
+    width: 100%;
+    margin-top: 10px;
+    padding: 7px;
+    outline: none;
+    border: none;
+    background-color: #eee;
+}
+input {
+    height: 40px;
+}
+
+button {
+    margin-top: 30px;
+    border: none;
+    padding: 7px 25px;
+    background-color: tomato;
+    color: white;
+    cursor: pointer;
+    border-radius: 5px;
+}
+button:hover {
+    background-color: #fa4627;
+
+}
+</style>
+</head>
+
+<body onload="get_users()">
+
+<div style="display: inline-flex; width: 100%; padding: 100px;">
+    <div style=" width:450px; border: solid 2px red;"> <p style="text-align: center"><b>Макет письма</b></p>
+    <!--============================left block============================-->
+        <div class="left_block">
+            <table style="width: 100%; height: 600px; border: 5px;">
+            <tbody>
+                <tr>
+                    <td style=" width: 100%;height: 100px; text-align: center">
+                        Все на отдых!!!
+                    </td>
+                </tr>
+                <tr>
+                    <td style=" width: 100%;height: 300px">
+                        <img src="./images/1.jpeg" style="width: 100%; height: 300px">
+                    </td>
+                </tr>
+                <tr>
+                    <td style="width: 100%;height: 50px; text-align: center">
+                        <p>Тел.: +7 777 777 77 77</p>
+                        <p>Web:<a style="font-size: 24px; font-weight: bold"> www.wwwwwww.ww</a></p>
+                    </td>
+                </tr>
+                <tr>
+                    <td >
+                    <table style=" width: 100%;height: 150px">
+                        <tbody>
+                        <tr>
+                            <td style=" width: 25%;height: 150px">Акции:</td>
+                            <td style=" width: 25%;height: 150px">Предложения:</td>
+                            <td style=" width: 25%;height: 150px">Цены:</td>
+                            <td style=" width: 25%;height: 150px">Контакты:</td>
+                        </tr>
+                        </tbody>
+                        </table>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+        </div></div>
+    <!--============================left block============================-->
+        <div class="center_block">
+            <button id="btn" >Написать письмо</button>
+            <!--modal-->
+            <div class="container" id="NewModal" hidden='true'>
+                <select id="user_email"></select>
+                <form id="form">
+                    <input id="send_to" autocomplete="on" placeholder="Введите mail">
+                    <input id="subject" autocomplete="on" placeholder="Введите тему письма">
+                    <textarea wrap="soft" rows="10" cols="40" id="send_text" autocomplete="on" placeholder="Введите Текст письма"></textarea>
+                </form>
+                <button type="submit" onclick="send()">Отправить</button>
+                <button type="submit" style="float: right;" onclick=close_modal()>Закрыть</button>
+            </div>
+        </div>
+    <!--============================right block============================-->
+        <!--<div style="width: 35%; height: 200px; background-color: #43ff4c">-->
+        <!--</div>-->
+    <!--============================right block============================-->
+
+</div>
+
+
+
+<script>
+
+/**
+ * Created by Stas on 17.02.2023.
+ */
+
+
+    function get_users() {
+        var data = 'get_users';
+        $.ajax({
+		url: '/send',
+		type: 'POST',
+		contentType: 'application/json',
+		data: JSON.stringify(data),
+            success: function result_get_users(request) {
+		    var req=JSON.parse(request);
+                console.log(req);
+                var u_selector = $('#user_email');
+                u_selector.empty();
+                u_selector.append($("<option></option>").attr("value", 'all').text('Подписчики Все'));
+               $.each(req , function (index, val){
+                  u_selector.append($("<option></option>").attr("value", val['email']).text(val['name']));
+                });
+            }});
+    }
+
+
+
+    $('#user_email').on('change',function () {
+        var user_imail = $('#user_email').val();
+        if (user_imail != 'all'){
+            $("#send_to").val(user_imail)
+        }else {
+            $("#send_to").val('')
+        }
+    });
+
+
+    $("#btn").click(function () {
+            $("#NewModal").removeAttr('hidden','true');
+            $("#btn").attr('hidden','true');
+            $('#user_email').val('all');
+            $("#send_to").val('');
+            $("#subject").val('');
+            $("#send_text").val('');
+        });
+
+function close_modal() {
+    $("#NewModal").attr('hidden','true');
+    $("#btn").removeAttr('hidden','true');
+}
+
+    function send() {
+        var send_to=$("#send_to").val();
+        var subject=$("#subject").val();
+        var send_text=$("#send_text").val();
+        var users_email=$("#user_email").val();
+        if (users_email == 'all' && send_to ==''){
+            send_to = 'all'
+        }else {
+            send_to = send_to
+        }
+
+    var data={'send_to':send_to,'subject': subject,'send_text':send_text};
+console.log(data);
+    $.ajax({
+		url: '/send',
+		type: 'POST',
+		contentType: 'application/json',
+		data: JSON.stringify(data),
+		    success: function () {
+                 alert('Письмо отправлено')
+            }});
+        close_modal();
+    }
+</script>
+</body>
+</html>
